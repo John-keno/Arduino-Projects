@@ -7,8 +7,8 @@
 #define DHTPIN 5       // What digital pin we're connected to
 #define DHTTYPE DHT11  // DHT 11
 #define Fan_pin 4
-#define incButton 6
-#define decButton 7
+#define incButton 7
+#define decButton 6
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 LiquidCrystal_I2C lcd(0x27, 16, 2);                             // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -17,7 +17,8 @@ sensors_event_t event;
 uint32_t delayMS;
 sensor_t sensor;
 int threshold = 30;
-int fanState = -1;
+boolean isOff = true;
+boolean isOn = true;
 
 void setup() {
   Serial.begin(9600);
@@ -40,12 +41,63 @@ void setup() {
 void loop() {
   float Humd = readHumd();
   float Temp = readTemp();
-  if (Temp > threshold) {
-    fanState = 1;
-    showFanState(fanState);
-    
+  if (Temp > threshold && isOff == true) {
+    showFanState(1);
+    isOff = false;
+    isOn = true;
   }
-  showSensor(Humd, Temp);
+  if (Temp < threshold && isOn == true) {
+    showFanState(0);
+    isOn = false;
+    isOff = true;
+  }
+
+  if (buttonPressed(incButton)) {
+    do {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Set Temperature ");
+      lcd.setCursor(0, 1);
+      lcd.print(" Limit = ");
+      lcd.print(threshold);
+      lcd.print("\001C");
+
+      if (threshold < 50)
+        threshold++;
+
+      delay(100);
+    } while (buttonPressed(incButton));
+    delay(100);
+  }
+  if (buttonPressed(decButton)) {
+    do {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Set Temperature ");
+      lcd.setCursor(0, 1);
+      lcd.print(" Limit = ");
+      lcd.print(threshold);
+      lcd.print("\001C");
+      if (threshold > 0)
+        threshold--;
+
+      delay(100);
+    } while (buttonPressed(decButton));
+    delay(100);
+  }
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Temp: ");
+  lcd.print(Temp);
+  lcd.print("\001C");  // degree symbol
+  lcd.setCursor(7, 0);
+  lcd.setCursor(0, 1);
+  lcd.print("Humd: ");
+  lcd.print(Humd);
+  lcd.print("%");
+
+  // showSensor(Humd, Temp);
 }
 
 float readTemp() {
@@ -67,9 +119,9 @@ float readHumd() {
   if (isnan(event.relative_humidity)) {
     Serial.println(F("Error reading humidity!"));
   } else {
-    // Serial.print(F("Humidity: "));
-    // Serial.print(event.relative_humidity);
-    // Serial.println(F("%"));
+    Serial.print(F("Humidity: "));
+    Serial.print(event.relative_humidity);
+    Serial.println(F("%"));
     return event.relative_humidity;
   }
 }
@@ -87,10 +139,8 @@ void showSensor(float Humd, float Temp) {
   lcd.print("%");
 }
 
-showFanState(int val) {
+void showFanState(int val) {
   // process received value
-  Serial.print("Fan state: ");
-  Serial.println(pinValue);
   if (val == 0) {
     digitalWrite(Fan_pin, HIGH);
     lcd.clear();
@@ -99,7 +149,6 @@ showFanState(int val) {
     lcd.setCursor(0, 1);
     lcd.print("     OFF  ");
     delay(2000);
-    fanState = -1;
   } else if (val == 1) {
     digitalWrite(Fan_pin, LOW);
     lcd.clear();
@@ -108,6 +157,13 @@ showFanState(int val) {
     lcd.setCursor(0, 1);
     lcd.print("     ON  ");
     delay(2000);
-    fanState = -1;
+  }
+}
+boolean buttonPressed(int button) {
+  delay(100);
+  if (digitalRead(button) == LOW) {
+    return true;
+  } else {
+    return false;
   }
 }

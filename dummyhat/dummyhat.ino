@@ -1,31 +1,41 @@
-#define switchButton 4
-#define fanPin 5
-#define alertButton 6
-#define buzzerButton 7
-
-int buttonState = 0;
+#include <SoftwareSerial.h>
+SoftwareSerial sim800L(3,2);
 
 void setup() {
-  pinMode(switchButton, INPUT_PULLUP);
-  pinMode(fanPin, OUTPUT);
-  pinMode(alertButton, INPUT_PULLUP);
-  pinMode(buzzerButton, INPUT_PULLUP);
+  Serial.begin(9600);
+  
+  //Begin serial communication with Arduino and SIM800L
+  sim800L.begin(9600);
+
+  Serial.println("Initializing...");
+  
+  sim800L.println("AT");
+  waitForResponse();
+
+  sim800L.println("ATE1");
+  waitForResponse();
+
+  sim800L.println("AT+CMGF=1");
+  waitForResponse();
+
+  sim800L.println("AT+CNMI=1,2,0,0,0");
+  waitForResponse();
 
 }
 
 void loop() {
-
-  if(buttonPressed(switchButton) && buttonState==0){}
-  if(buttonPressed(switchButton) && buttonState==1){}
-  if(buttonPressed(switchButton) && buttonState==2){}
-  if(buttonPressed(switchButton) && buttonState==3){}
+make_call("+2348064810572");
 
 }
+void make_call(String phoneNo){
+  sim800L.println("ATD"+phoneNo+";");
+  waitForResponse();
+}
 
-boolean buttonPressed(int button) {
-  delay(100);
-  if (digitalRead(button) == LOW) {
-    return true;
-  } else {
-    return false;
+void waitForResponse(){
+  delay(1000);
+  while(sim800L.available()){
+    Serial.println(sim800L.readString());
   }
+//  sim800L.read();
+}

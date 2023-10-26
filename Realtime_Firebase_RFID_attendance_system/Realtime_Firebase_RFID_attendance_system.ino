@@ -12,14 +12,14 @@
 #include <addons/RTDBHelper.h>
 
 /* 1. Define the WiFi credentials */
-#define WIFI_SSID "kejo"
-#define WIFI_PASSWORD "ced$$mon$$ghost~"
+#define WIFI_SSID "kejoteck"
+#define WIFI_PASSWORD "ghost1234"
 
 /* 2. Define the API Key */
 #define API_KEY "AIzaSyCQkb21Q7i1ze38_xIudTeVC0Ti0fI0qlM"
 
 /* 3. Define the RTDB URL */
-#define DATABASE_URL "https://rfid-web-2a373-default-rtdb.firebaseio.com"  //<databaseName>.firebaseio.com or <databaseName>.<region>.firebasedatabase.app
+#define DATABASE_URL "https://rfid-web-2a373-default-rtdb.firebaseio.com/"  //<databaseName>.firebaseio.com or <databaseName>.<region>.firebasedatabase.app
 
 /* 4. Define the user Email and password that alreadey registerd or added in your project */
 #define USER_EMAIL "attendance@kejoteck.com"
@@ -53,7 +53,12 @@ void connect() {
   Serial.print("checking wifi...");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
+    lcd.setCursor(1, 0);
+    lcd.print("CONNECTING TO");
+    lcd.setCursor(1, 1);
+    lcd.print("ROUTER");
     delay(300);
+    lcd.clear();
   }
 
   Serial.println("\n connected!");
@@ -94,7 +99,7 @@ void setup() {
   lcd.print("CONN TO SERVER");
 
   config.token_status_callback = tokenStatusCallback;  // see addons/TokenHelper.h
-  
+
   Firebase.reconnectNetwork(true);
 
   fbdo.setBSSLBufferSize(4096, 1024);
